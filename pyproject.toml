@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "projectile-motion"
+version = "0.1.0"
+description = "Projectile motion demo"
+authors = ["rakin406"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
