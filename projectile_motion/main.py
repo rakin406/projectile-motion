@@ -22,7 +22,12 @@ background = pyglet.image.SolidColorImagePattern(
 floor = pyglet.shapes.Line(x=0, y=FLOOR_HEIGHT, x2=1280, y2=FLOOR_HEIGHT,
                            width=5, color=(0, 0, 0), batch=batch)
 
-# cannon = pyglet.resource.image("cannon.png")
+# Create cannon sprite
+# WARNING: y-axis of the cannon is hardcoded.
+cannon_image = pyglet.resource.image("cannon.png")
+cannon = pyglet.sprite.Sprite(
+    cannon_image, x=10, y=FLOOR_HEIGHT - 21, batch=batch)
+cannon.scale = 0.1
 
 
 @window.event
