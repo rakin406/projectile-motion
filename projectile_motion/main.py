@@ -29,6 +29,13 @@ cannon = pyglet.sprite.Sprite(
     cannon_image, x=10, y=FLOOR_HEIGHT - 21, batch=batch)
 cannon.scale = 0.1
 
+# Create bucket sprite
+# WARNING: y-axis of the bucket is hardcoded.
+bucket_image = pyglet.resource.image("bucket.png")
+bucket = pyglet.sprite.Sprite(
+    bucket_image, x=WINDOW_WIDTH // 2, y=FLOOR_HEIGHT + 3, batch=batch)
+bucket.scale = 0.2
+
 
 @window.event
 def on_draw():
