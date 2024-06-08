@@ -1,5 +1,6 @@
 """Entry point to the simulation."""
 
+import math
 import pyglet
 from pyglet.window import Window
 from pyglet.window import key
@@ -8,6 +9,7 @@ from pyglet.window import mouse
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 FLOOR_HEIGHT = WINDOW_HEIGHT - 600
+TEXT = "Horizontal displacement: {distance}m"
 
 pyglet.resource.path = ["../assets"]
 pyglet.resource.reindex()
@@ -45,6 +47,23 @@ bucket.scale = 0.2
 bucket.dx = 400.0
 
 
+def get_displacement_x() -> int:
+    """Get horizontal displacement."""
+    cannon_center_x = cannon.x + ((cannon_image.width / 2) * cannon.scale)
+    bucket_center_x = bucket.x + ((bucket_image.width / 2) * bucket.scale)
+    return math.ceil(bucket_center_x - cannon_center_x)
+
+
+label = pyglet.text.Label(TEXT.format(distance=get_displacement_x()),
+                          font_name="Times New Roman",
+                          font_size=20,
+                          color=(0, 0, 0, 255),
+                          x=10, y=WINDOW_HEIGHT - 30,
+                          width=500,
+                          multiline=True,
+                          batch=batch)
+
+
 @window.event
 def on_key_press(symbol, _):
     if symbol == key.SPACE:
@@ -68,6 +87,9 @@ def move_bucket(dt):
         bucket.x -= bucket.dx * dt
     elif mousebuttons[mouse.RIGHT] and (bucket.x + (bucket_image.width * bucket.scale)) < window.get_size()[0]:
         bucket.x += bucket.dx * dt
+
+    # Update the text
+    label.text = TEXT.format(distance=get_displacement_x())
 
 
 if __name__ == "__main__":
