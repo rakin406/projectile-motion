@@ -11,7 +11,7 @@ GRAVITY = 9.81
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 FLOOR_HEIGHT = WINDOW_HEIGHT - 600
-TEXT = "Horizontal displacement: {distance}m"
+TEXT = "Horizontal range: {distance}m"
 
 pyglet.resource.path = ["../assets"]
 pyglet.resource.reindex()
@@ -43,9 +43,11 @@ cannon.y = FLOOR_HEIGHT - 21
 cannon_center_x = cannon.x + (cannon.width / 2)
 
 # Create cannonball sprite
-cannonball_image = pyglet.resource.image("cannonball.png")
-cannonball = pyglet.sprite.Sprite(cannonball_image, x=10, y=FLOOR_HEIGHT - 21)
-cannonball.scale = 0.15
+# cannonball_image = pyglet.resource.image("cannonball.png")
+# cannonball = pyglet.sprite.Sprite(cannonball_image)
+# cannonball.scale = 0.15
+# cannonball.x = cannon_center_x
+# cannonball.y = cannon.y
 
 # Create bucket sprite
 # WARNING: y-axis of the bucket is hardcoded.
@@ -57,13 +59,12 @@ bucket.y = FLOOR_HEIGHT + 3
 bucket.dx = 400.0
 
 
-def get_displacement_x() -> int:
-    """Get horizontal displacement."""
+def get_horizontal_range() -> int:
     bucket_center_x = bucket.x + (bucket.width / 2)
     return math.ceil(bucket_center_x - cannon_center_x)
 
 
-label = pyglet.text.Label(TEXT.format(distance=get_displacement_x()),
+label = pyglet.text.Label(TEXT.format(distance=get_horizontal_range()),
                           font_name="Times New Roman",
                           font_size=20,
                           color=(0, 0, 0, 255),
@@ -77,7 +78,8 @@ label = pyglet.text.Label(TEXT.format(distance=get_displacement_x()),
 def on_key_press(symbol, _):
     # Start the simulation
     if symbol == key.SPACE:
-        cannonball.batch = batch
+        # cannonball.batch = batch
+        pass
     elif symbol == key.R:
         # TODO: Implement reset mechanism.
         pass
@@ -97,7 +99,7 @@ def move_bucket(dt):
         bucket.x += bucket.dx * dt
 
     # Update the text
-    label.text = TEXT.format(distance=get_displacement_x())
+    label.text = TEXT.format(distance=get_horizontal_range())
 
 
 if __name__ == "__main__":
