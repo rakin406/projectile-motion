@@ -1,6 +1,7 @@
 """Entry point to the simulation."""
 
 import math
+import sympy as sym
 import pyglet
 from pyglet.window import Window
 from pyglet import shapes
@@ -72,6 +73,20 @@ label = pyglet.text.Label(TEXT.format(distance=get_horizontal_range()),
                           width=500,
                           multiline=True,
                           batch=batch)
+
+
+def find_vel_derivative(horizontal_range):
+    """Find derivative of initial velocity."""
+    x = sym.symbols("x")
+    return sym.diff(sym.sqrt((horizontal_range * GRAVITY) / sym.sin(2 * x)), x)
+
+
+def find_best_angle(derivative):
+    return sym.solve(sym.Eq(derivative, 0))
+
+
+def get_initial_vel(horizontal_range, angle) -> float:
+    return math.sqrt((horizontal_range * GRAVITY) / math.sin(2 * angle))
 
 
 @window.event
