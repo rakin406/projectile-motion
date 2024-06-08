@@ -2,6 +2,8 @@
 
 import pyglet
 from pyglet.window import Window
+from pyglet.window import key
+from pyglet.window import mouse
 
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
@@ -12,6 +14,11 @@ pyglet.resource.reindex()
 
 window = Window(width=WINDOW_WIDTH, height=WINDOW_HEIGHT,
                 caption="Projectile Motion")
+
+# Monitor mouse state
+mousebuttons = mouse.MouseStateHandler()
+window.push_handlers(mousebuttons)
+
 batch = pyglet.graphics.Batch()
 
 # Create white background
@@ -38,10 +45,31 @@ bucket.scale = 0.2
 
 
 @window.event
+def on_key_press(symbol, _):
+    if symbol == key.SPACE:
+        # TODO: Start the simulation.
+        pass
+    elif symbol == key.R:
+        # TODO: Implement reset mechanism.
+        pass
+
+
+@window.event
 def on_draw():
     window.clear()
     background.blit(0, 0)
     batch.draw()
 
 
-pyglet.app.run()
+def update(_):
+    # Bucket movement
+    if mousebuttons[mouse.LEFT]:
+        print("Going left!")
+        # pass
+    elif mousebuttons[mouse.RIGHT]:
+        pass
+
+
+if __name__ == "__main__":
+    pyglet.clock.schedule_interval(update, 1 / 60.0)
+    pyglet.app.run()
