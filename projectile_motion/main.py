@@ -2,6 +2,8 @@
 
 import pyglet
 from pyglet.window import Window
+from pyglet.window import key
+from pyglet.window import mouse
 
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
@@ -12,6 +14,11 @@ pyglet.resource.reindex()
 
 window = Window(width=WINDOW_WIDTH, height=WINDOW_HEIGHT,
                 caption="Projectile Motion")
+
+# Monitor mouse state
+mousebuttons = mouse.MouseStateHandler()
+window.push_handlers(mousebuttons)
+
 batch = pyglet.graphics.Batch()
 
 # Create white background
@@ -35,6 +42,17 @@ bucket_image = pyglet.resource.image("bucket.png")
 bucket = pyglet.sprite.Sprite(
     bucket_image, x=WINDOW_WIDTH // 2, y=FLOOR_HEIGHT + 3, batch=batch)
 bucket.scale = 0.2
+bucket.dx = 400.0
+
+
+@window.event
+def on_key_press(symbol, _):
+    if symbol == key.SPACE:
+        # TODO: Start the simulation.
+        pass
+    elif symbol == key.R:
+        # TODO: Implement reset mechanism.
+        pass
 
 
 @window.event
@@ -44,4 +62,14 @@ def on_draw():
     batch.draw()
 
 
-pyglet.app.run()
+def move_bucket(dt):
+    if mousebuttons[mouse.LEFT] and \
+            bucket.x > (cannon.x + (cannon_image.width * cannon.scale)):
+        bucket.x -= bucket.dx * dt
+    elif mousebuttons[mouse.RIGHT] and (bucket.x + (bucket_image.width * bucket.scale)) < window.get_size()[0]:
+        bucket.x += bucket.dx * dt
+
+
+if __name__ == "__main__":
+    pyglet.clock.schedule_interval(move_bucket, 1 / 60.0)
+    pyglet.app.run()
