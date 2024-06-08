@@ -42,6 +42,7 @@ bucket_image = pyglet.resource.image("bucket.png")
 bucket = pyglet.sprite.Sprite(
     bucket_image, x=WINDOW_WIDTH // 2, y=FLOOR_HEIGHT + 3, batch=batch)
 bucket.scale = 0.2
+bucket.dx = 400.0
 
 
 @window.event
@@ -61,15 +62,13 @@ def on_draw():
     batch.draw()
 
 
-def update(_):
-    # Bucket movement
+def move_bucket(dt):
     if mousebuttons[mouse.LEFT]:
-        print("Going left!")
-        # pass
+        bucket.x -= bucket.dx * dt
     elif mousebuttons[mouse.RIGHT]:
-        pass
+        bucket.x += bucket.dx * dt
 
 
 if __name__ == "__main__":
-    pyglet.clock.schedule_interval(update, 1 / 60.0)
+    pyglet.clock.schedule_interval(move_bucket, 1 / 60.0)
     pyglet.app.run()
