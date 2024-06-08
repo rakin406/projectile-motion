@@ -34,21 +34,14 @@ background = pyglet.image.SolidColorImagePattern(
 floor = shapes.Line(x=0, y=FLOOR_HEIGHT, x2=1280, y2=FLOOR_HEIGHT,
                     width=5, color=(0, 0, 0), batch=batch)
 
-# Create cannon sprite
-# WARNING: y-axis of the cannon is hardcoded.
-cannon_image = pyglet.resource.image("cannon.png")
-cannon = pyglet.sprite.Sprite(cannon_image, batch=batch)
-cannon.scale = 0.1
-cannon.x = 10
-cannon.y = FLOOR_HEIGHT - 21
-cannon_center_x = cannon.x + (cannon.width / 2)
-
 # Create cannonball sprite
-# cannonball_image = pyglet.resource.image("cannonball.png")
-# cannonball = pyglet.sprite.Sprite(cannonball_image)
-# cannonball.scale = 0.15
-# cannonball.x = cannon_center_x
-# cannonball.y = cannon.y
+# WARNING: y-axis of the sprite is hardcoded.
+cannonball_image = pyglet.resource.image("cannonball.png")
+cannonball = pyglet.sprite.Sprite(cannonball_image, batch=batch)
+cannonball.scale = 0.15
+cannonball.x = 25
+cannonball.y = FLOOR_HEIGHT
+cannonball_center_x = cannonball.x + (cannonball.width / 2)
 
 # Create bucket sprite
 # WARNING: y-axis of the bucket is hardcoded.
@@ -62,7 +55,7 @@ bucket.dx = 400.0
 
 def get_horizontal_range() -> int:
     bucket_center_x = bucket.x + (bucket.width / 2)
-    return math.ceil(bucket_center_x - cannon_center_x)
+    return math.ceil(bucket_center_x - cannonball_center_x)
 
 
 label = pyglet.text.Label(TEXT.format(distance=get_horizontal_range()),
@@ -77,7 +70,7 @@ label = pyglet.text.Label(TEXT.format(distance=get_horizontal_range()),
 
 def find_vel_derivative(horizontal_range):
     """Find derivative of initial velocity."""
-    x = sym.symbols("x")
+    x = sym.symbols("x")    # Angle
     return sym.diff(sym.sqrt((horizontal_range * GRAVITY) / sym.sin(2 * x)), x)
 
 
@@ -93,8 +86,7 @@ def get_initial_vel(horizontal_range, angle) -> float:
 def on_key_press(symbol, _):
     # Start the simulation
     if symbol == key.SPACE:
-        # cannonball.batch = batch
-        pass
+        cannonball.batch = batch
     elif symbol == key.R:
         # TODO: Implement reset mechanism.
         pass
@@ -108,7 +100,7 @@ def on_draw():
 
 
 def move_bucket(dt):
-    if mousebuttons[mouse.LEFT] and bucket.x > (cannon.x + cannon.width):
+    if mousebuttons[mouse.LEFT] and bucket.x > (cannonball.x + cannonball.width):
         bucket.x -= bucket.dx * dt
     elif mousebuttons[mouse.RIGHT] and (bucket.x + bucket.width) < window.get_size()[0]:
         bucket.x += bucket.dx * dt
