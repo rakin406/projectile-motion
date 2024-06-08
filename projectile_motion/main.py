@@ -63,9 +63,10 @@ def on_draw():
 
 
 def move_bucket(dt):
-    if mousebuttons[mouse.LEFT]:
+    if mousebuttons[mouse.LEFT] and \
+            bucket.x > (cannon.x + (cannon_image.width * cannon.scale)):
         bucket.x -= bucket.dx * dt
-    elif mousebuttons[mouse.RIGHT]:
+    elif mousebuttons[mouse.RIGHT] and (bucket.x + (bucket_image.width * bucket.scale)) < window.get_size()[0]:
         bucket.x += bucket.dx * dt
 
 
