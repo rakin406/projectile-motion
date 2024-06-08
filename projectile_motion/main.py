@@ -6,6 +6,7 @@ from pyglet.window import Window
 from pyglet.window import key
 from pyglet.window import mouse
 
+GRAVITY = 9.81
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 FLOOR_HEIGHT = WINDOW_HEIGHT - 600
