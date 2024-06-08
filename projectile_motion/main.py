@@ -8,6 +8,11 @@ from pyglet import shapes
 from pyglet.window import key
 from pyglet.window import mouse
 
+# You might be wondering why there's a cannonball but no cannon. Well, that's
+# because I changed my mind and wanted to keep things simple and finish the
+# project ASAP. Besides, I have no idea how to sync cannon with the cannonball
+# lol.
+
 GRAVITY = 9.81
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
@@ -39,9 +44,8 @@ floor = shapes.Line(x=0, y=FLOOR_HEIGHT, x2=1280, y2=FLOOR_HEIGHT,
 cannonball_image = pyglet.resource.image("cannonball.png")
 cannonball = pyglet.sprite.Sprite(cannonball_image, batch=batch)
 cannonball.scale = 0.15
-cannonball.x = 25
+cannonball.x = 25.0
 cannonball.y = FLOOR_HEIGHT
-cannonball_center_x = cannonball.x + (cannonball.width / 2)
 
 # Create bucket sprite
 # WARNING: y-axis of the bucket is hardcoded.
@@ -55,6 +59,7 @@ bucket.dx = 400.0
 
 def get_horizontal_range() -> int:
     bucket_center_x = bucket.x + (bucket.width / 2)
+    cannonball_center_x = cannonball.x + (cannonball.width / 2)
     return math.ceil(bucket_center_x - cannonball_center_x)
 
 
@@ -82,11 +87,15 @@ def get_initial_vel(horizontal_range, angle) -> float:
     return math.sqrt((horizontal_range * GRAVITY) / math.sin(2 * angle))
 
 
+started = False
+
+
 @window.event
 def on_key_press(symbol, _):
     # Start the simulation
     if symbol == key.SPACE:
-        cannonball.batch = batch
+        global started
+        started = True
     elif symbol == key.R:
         # TODO: Implement reset mechanism.
         pass
@@ -100,13 +109,14 @@ def on_draw():
 
 
 def move_bucket(dt):
-    if mousebuttons[mouse.LEFT] and bucket.x > (cannonball.x + cannonball.width):
-        bucket.x -= bucket.dx * dt
-    elif mousebuttons[mouse.RIGHT] and (bucket.x + bucket.width) < window.get_size()[0]:
-        bucket.x += bucket.dx * dt
+    if not started:
+        if mousebuttons[mouse.LEFT] and bucket.x > (cannonball.x + cannonball.width):
+            bucket.x -= bucket.dx * dt
+        elif mousebuttons[mouse.RIGHT] and (bucket.x + bucket.width) < window.get_size()[0]:
+            bucket.x += bucket.dx * dt
 
-    # Update the text
-    label.text = TEXT.format(distance=get_horizontal_range())
+        # Update the text
+        label.text = TEXT.format(distance=get_horizontal_range())
 
 
 if __name__ == "__main__":
