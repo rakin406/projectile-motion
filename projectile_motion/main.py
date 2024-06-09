@@ -87,6 +87,10 @@ def get_initial_vel(horizontal_range, angle) -> float:
     return math.sqrt((horizontal_range * GRAVITY) / math.sin(2 * angle))
 
 
+def get_horizontal_vel(initial_vel, angle) -> float:
+    return initial_vel * math.cos(angle)
+
+
 started = False
 
 
