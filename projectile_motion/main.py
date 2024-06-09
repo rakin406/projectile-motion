@@ -112,7 +112,6 @@ total_time = 0.0
 angle = 0.0
 initial_vel = 0.0
 horizontal_vel = 0.0
-vertical_vel = 0.0
 projectile_time = 0.0
 
 
@@ -161,6 +160,8 @@ def update(dt):
             cannonball.y = INITIAL_BALL_Y + initial_vertical_vel * projectile_time \
                 - 0.5 * GRAVITY * (projectile_time ** 2)
 
+            current_vertical_vel = initial_vertical_vel - GRAVITY * projectile_time
+
             # Update the text
             label.text = TEXT.format(
                 round(horizontal_range, 2),
@@ -169,7 +170,7 @@ def update(dt):
                 round(angle, 2),
                 round(initial_vel, 2),
                 round(horizontal_vel, 2),
-                round(vertical_vel, 2))
+                round(current_vertical_vel, 2))
     else:
         move_bucket(dt)
         horizontal_range = get_horizontal_range()
