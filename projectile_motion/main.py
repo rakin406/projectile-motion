@@ -10,8 +10,7 @@ from pyglet.window import mouse
 
 # You might be wondering why there's a cannonball but no cannon. Well, that's
 # because I changed my mind and wanted to keep things simple and finish the
-# project ASAP. Besides, I have no idea how to sync cannon with the cannonball
-# lol.
+# project ASAP.
 
 GRAVITY = 9.81
 WINDOW_WIDTH = 1280
@@ -19,7 +18,13 @@ WINDOW_HEIGHT = 720
 FLOOR_HEIGHT = WINDOW_HEIGHT - 600
 INITIAL_BALL_X = 25.0
 INITIAL_BALL_Y = FLOOR_HEIGHT
-TEXT = "Horizontal range: {distance}m"
+TEXT = """Horizontal range: {}m
+Maximum height: {}m
+Total time: {}s
+Angle: {} rad
+Initial velocity: {}m/s
+Horizontal velocity: {}m/s
+Vertical velocity: {}m/s"""
 
 pyglet.resource.path = ["../assets"]
 pyglet.resource.reindex()
@@ -58,21 +63,14 @@ bucket.x = (WINDOW_WIDTH // 2) - (bucket.width / 2)
 bucket.y = FLOOR_HEIGHT + 3
 bucket.dx = 400.0
 
-
-def get_horizontal_range() -> int:
-    bucket_center_x = bucket.x + (bucket.width / 2)
-    cannonball_center_x = cannonball.x + (cannonball.width / 2)
-    return math.ceil(bucket_center_x - cannonball_center_x)
-
-
-label = pyglet.text.Label(TEXT.format(distance=get_horizontal_range()),
-                          font_name="Times New Roman",
-                          font_size=20,
-                          color=(0, 0, 0, 255),
-                          x=10, y=WINDOW_HEIGHT - 30,
-                          width=500,
-                          multiline=True,
-                          batch=batch)
+label = pyglet.text.Label(
+    font_name="Times New Roman",
+    font_size=20,
+    color=(0, 0, 0, 255),
+    x=10, y=WINDOW_HEIGHT - 30,
+    width=500,
+    multiline=True,
+    batch=batch)
 
 
 def find_vel_derivative(horizontal_range):
@@ -97,11 +95,23 @@ def get_total_time(initial_vel, angle) -> float:
     return (2 * initial_vel * math.sin(angle)) / GRAVITY
 
 
+def get_max_height(initial_vel, angle) -> float:
+    return ((initial_vel ** 2) * (math.sin(angle) ** 2)) / 2 * GRAVITY
+
+
+def get_horizontal_range() -> float:
+    bucket_center_x = bucket.x + (bucket.width / 2)
+    cannonball_center_x = cannonball.x + (cannonball.width / 2)
+    return bucket_center_x - cannonball_center_x
+
+
 started = False
-angle = None
-initial_vel = None
-horizontal_vel = None
-total_time = None
+horizontal_range = 0.0
+max_height = 0.0
+total_time = 0.0
+angle = 0.0
+initial_vel = 0.0
+horizontal_vel = 0.0
 projectile_time = 0.0
 
 
@@ -109,13 +119,13 @@ projectile_time = 0.0
 def on_key_press(symbol, _):
     # Start the simulation
     if symbol == key.SPACE:
-        global started, angle, initial_vel, horizontal_vel, total_time
+        global started, max_height, total_time, angle, initial_vel, horizontal_vel
         started = True
-        horizontal_range = get_horizontal_range()
         derivative = find_vel_derivative(horizontal_range)
         angle = find_best_angle(derivative)[0]
         initial_vel = get_initial_vel(horizontal_range, angle)
         horizontal_vel = get_horizontal_vel(initial_vel, angle)
+        max_height = get_max_height(initial_vel, angle)
         total_time = get_total_time(initial_vel, angle)
     elif symbol == key.R:
         # TODO: Implement reset mechanism.
@@ -135,11 +145,10 @@ def move_bucket(dt):
     elif mousebuttons[mouse.RIGHT] and (bucket.x + bucket.width) < window.get_size()[0]:
         bucket.x += bucket.dx * dt
 
-    # Update the text
-    label.text = TEXT.format(distance=get_horizontal_range())
-
 
 def update(dt):
+    global horizontal_range
+
     if started:
         if cannonball.x <= bucket.x:
             global projectile_time
@@ -150,8 +159,22 @@ def update(dt):
             cannonball.x = INITIAL_BALL_X + horizontal_vel * projectile_time
             cannonball.y = INITIAL_BALL_Y + initial_vertical_vel * projectile_time \
                 - 0.5 * GRAVITY * (projectile_time ** 2)
+
+            current_vertical_vel = initial_vertical_vel - GRAVITY * projectile_time
+
+            # Update the text
+            label.text = TEXT.format(
+                round(horizontal_range, 2),
+                round(max_height, 2),
+                round(total_time, 2),
+                round(angle, 2),
+                round(initial_vel, 2),
+                round(horizontal_vel, 2),
+                round(current_vertical_vel, 2))
     else:
         move_bucket(dt)
+        horizontal_range = get_horizontal_range()
+        label.text = TEXT.format(round(horizontal_range, 2), 0, 0, 0, 0, 0, 0)
 
 
 if __name__ == "__main__":
