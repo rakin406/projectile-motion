@@ -91,6 +91,10 @@ def get_horizontal_vel(initial_vel, angle) -> float:
     return initial_vel * math.cos(angle)
 
 
+def get_total_time(initial_vel, angle) -> float:
+    return (2 * initial_vel * math.sin(angle)) / GRAVITY
+
+
 started = False
 angle = None
 initial_vel = None
