@@ -63,13 +63,6 @@ bucket.x = (WINDOW_WIDTH // 2) - (bucket.width / 2)
 bucket.y = FLOOR_HEIGHT + 3
 bucket.dx = 400.0
 
-
-def get_horizontal_range() -> int:
-    bucket_center_x = bucket.x + (bucket.width / 2)
-    cannonball_center_x = cannonball.x + (cannonball.width / 2)
-    return math.ceil(bucket_center_x - cannonball_center_x)
-
-
 label = pyglet.text.Label(
     font_name="Times New Roman",
     font_size=20,
@@ -102,11 +95,24 @@ def get_total_time(initial_vel, angle) -> float:
     return (2 * initial_vel * math.sin(angle)) / GRAVITY
 
 
+def get_max_height(initial_vel, angle) -> float:
+    return ((initial_vel ** 2) * (math.sin(angle) ** 2)) / 2 * GRAVITY
+
+
+def get_horizontal_range() -> float:
+    bucket_center_x = bucket.x + (bucket.width / 2)
+    cannonball_center_x = cannonball.x + (cannonball.width / 2)
+    return bucket_center_x - cannonball_center_x
+
+
 started = False
-angle = None
-initial_vel = None
-horizontal_vel = None
-total_time = None
+horizontal_range = 0.0
+max_height = 0.0
+total_time = 0.0
+angle = 0.0
+initial_vel = 0.0
+horizontal_vel = 0.0
+vertical_vel = 0.0
 projectile_time = 0.0
 
 
@@ -114,13 +120,13 @@ projectile_time = 0.0
 def on_key_press(symbol, _):
     # Start the simulation
     if symbol == key.SPACE:
-        global started, angle, initial_vel, horizontal_vel, total_time
+        global started, max_height, total_time, angle, initial_vel, horizontal_vel
         started = True
-        horizontal_range = get_horizontal_range()
         derivative = find_vel_derivative(horizontal_range)
         angle = find_best_angle(derivative)[0]
         initial_vel = get_initial_vel(horizontal_range, angle)
         horizontal_vel = get_horizontal_vel(initial_vel, angle)
+        max_height = get_max_height(initial_vel, angle)
         total_time = get_total_time(initial_vel, angle)
     elif symbol == key.R:
         # TODO: Implement reset mechanism.
@@ -142,6 +148,8 @@ def move_bucket(dt):
 
 
 def update(dt):
+    global horizontal_range
+
     if started:
         if cannonball.x <= bucket.x:
             global projectile_time
@@ -152,10 +160,20 @@ def update(dt):
             cannonball.x = INITIAL_BALL_X + horizontal_vel * projectile_time
             cannonball.y = INITIAL_BALL_Y + initial_vertical_vel * projectile_time \
                 - 0.5 * GRAVITY * (projectile_time ** 2)
+
+            # Update the text
+            label.text = TEXT.format(
+                round(horizontal_range, 2),
+                round(max_height, 2),
+                round(total_time, 2),
+                round(angle, 2),
+                round(initial_vel, 2),
+                round(horizontal_vel, 2),
+                round(vertical_vel, 2))
     else:
         move_bucket(dt)
-        # Update the text
-        label.text = TEXT.format(get_horizontal_range(), 0, 0, 0, 0, 0, 0)
+        horizontal_range = get_horizontal_range()
+        label.text = TEXT.format(round(horizontal_range, 2), 0, 0, 0, 0, 0, 0)
 
 
 if __name__ == "__main__":
