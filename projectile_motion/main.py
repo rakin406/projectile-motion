@@ -92,14 +92,22 @@ def get_horizontal_vel(initial_vel, angle) -> float:
 
 
 started = False
+angle = None
+initial_vel = None
+horizontal_vel = None
 
 
 @window.event
 def on_key_press(symbol, _):
     # Start the simulation
     if symbol == key.SPACE:
-        global started
+        global started, angle, initial_vel, horizontal_vel
         started = True
+        horizontal_range = get_horizontal_range()
+        derivative = find_vel_derivative(horizontal_range)
+        angle = find_best_angle(derivative)[0]
+        initial_vel = get_initial_vel(horizontal_range, angle)
+        horizontal_vel = get_horizontal_vel(initial_vel, angle)
     elif symbol == key.R:
         # TODO: Implement reset mechanism.
         pass
@@ -113,16 +121,24 @@ def on_draw():
 
 
 def move_bucket(dt):
-    if not started:
-        if mousebuttons[mouse.LEFT] and bucket.x > (cannonball.x + cannonball.width):
-            bucket.x -= bucket.dx * dt
-        elif mousebuttons[mouse.RIGHT] and (bucket.x + bucket.width) < window.get_size()[0]:
-            bucket.x += bucket.dx * dt
+    if mousebuttons[mouse.LEFT] and bucket.x > (cannonball.x + cannonball.width):
+        bucket.x -= bucket.dx * dt
+    elif mousebuttons[mouse.RIGHT] and (bucket.x + bucket.width) < window.get_size()[0]:
+        bucket.x += bucket.dx * dt
 
-        # Update the text
-        label.text = TEXT.format(distance=get_horizontal_range())
+    # Update the text
+    label.text = TEXT.format(distance=get_horizontal_range())
+
+
+def update(dt):
+    if started:
+        # Move in x-axis with constant horizontal velocity
+        if cannonball.x <= bucket.x:
+            cannonball.x += horizontal_vel * dt
+    else:
+        move_bucket(dt)
 
 
 if __name__ == "__main__":
-    pyglet.clock.schedule_interval(move_bucket, 1 / 60.0)
+    pyglet.clock.schedule_interval(update, 1 / 60.0)
     pyglet.app.run()
