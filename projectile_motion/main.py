@@ -17,6 +17,8 @@ GRAVITY = 9.81
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 FLOOR_HEIGHT = WINDOW_HEIGHT - 600
+INITIAL_BALL_X = 25.0
+INITIAL_BALL_Y = FLOOR_HEIGHT
 TEXT = "Horizontal range: {distance}m"
 
 pyglet.resource.path = ["../assets"]
@@ -44,8 +46,8 @@ floor = shapes.Line(x=0, y=FLOOR_HEIGHT, x2=1280, y2=FLOOR_HEIGHT,
 cannonball_image = pyglet.resource.image("cannonball.png")
 cannonball = pyglet.sprite.Sprite(cannonball_image, batch=batch)
 cannonball.scale = 0.15
-cannonball.x = 25.0
-cannonball.y = FLOOR_HEIGHT
+cannonball.x = INITIAL_BALL_X
+cannonball.y = INITIAL_BALL_Y
 
 # Create bucket sprite
 # WARNING: y-axis of the bucket is hardcoded.
@@ -99,19 +101,22 @@ started = False
 angle = None
 initial_vel = None
 horizontal_vel = None
+total_time = None
+projectile_time = 0.0
 
 
 @window.event
 def on_key_press(symbol, _):
     # Start the simulation
     if symbol == key.SPACE:
-        global started, angle, initial_vel, horizontal_vel
+        global started, angle, initial_vel, horizontal_vel, total_time
         started = True
         horizontal_range = get_horizontal_range()
         derivative = find_vel_derivative(horizontal_range)
         angle = find_best_angle(derivative)[0]
         initial_vel = get_initial_vel(horizontal_range, angle)
         horizontal_vel = get_horizontal_vel(initial_vel, angle)
+        total_time = get_total_time(initial_vel, angle)
     elif symbol == key.R:
         # TODO: Implement reset mechanism.
         pass
@@ -136,9 +141,14 @@ def move_bucket(dt):
 
 def update(dt):
     if started:
-        # Move in x-axis with constant horizontal velocity
         if cannonball.x <= bucket.x:
-            cannonball.x += horizontal_vel * dt
+            global projectile_time
+            projectile_time += dt
+
+            initial_vertical_vel = initial_vel * math.sin(angle)
+            cannonball.x = INITIAL_BALL_X + horizontal_vel * projectile_time
+            cannonball.y = INITIAL_BALL_Y + initial_vertical_vel * projectile_time \
+                - 0.5 * GRAVITY * (projectile_time ** 2)
     else:
         move_bucket(dt)
 
