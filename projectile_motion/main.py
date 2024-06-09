@@ -145,6 +145,7 @@ def update(dt):
             global projectile_time
             projectile_time += dt
 
+            # TODO: Make cannonball land inside the bucket instead of outside.
             initial_vertical_vel = initial_vel * math.sin(angle)
             cannonball.x = INITIAL_BALL_X + horizontal_vel * projectile_time
             cannonball.y = INITIAL_BALL_Y + initial_vertical_vel * projectile_time \
