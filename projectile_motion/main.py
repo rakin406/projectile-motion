@@ -83,6 +83,12 @@ def find_best_angle(derivative):
     return sym.solve(sym.Eq(derivative, 0))
 
 
+def get_total_time(initial_y, final_y, initial_vertical_vel):
+    t = sym.symbols("t")    # Time
+    return sym.solve(sym.Eq(initial_y + initial_vertical_vel * t - 0.5 *
+                            GRAVITY * (t ** 2), final_y))
+
+
 def get_initial_vel(horizontal_range, angle) -> float:
     return math.sqrt((horizontal_range * GRAVITY) / math.sin(2 * angle))
 
@@ -91,8 +97,8 @@ def get_horizontal_vel(initial_vel, angle) -> float:
     return initial_vel * math.cos(angle)
 
 
-def get_total_time(initial_vel, angle) -> float:
-    return (2 * initial_vel * math.sin(angle)) / GRAVITY
+# def get_total_time(initial_vel, angle) -> float:
+#     return (2 * initial_vel * math.sin(angle)) / GRAVITY
 
 
 def get_max_height(initial_vel, angle) -> float:
@@ -126,7 +132,10 @@ def on_key_press(symbol, _):
         initial_vel = get_initial_vel(horizontal_range, angle)
         horizontal_vel = get_horizontal_vel(initial_vel, angle)
         max_height = get_max_height(initial_vel, angle)
-        total_time = get_total_time(initial_vel, angle)
+
+        initial_vertical_vel = initial_vel * math.sin(angle)
+        total_time = get_total_time(
+            cannonball.y, FLOOR_HEIGHT - bucket.height, initial_vertical_vel)[1]
     elif symbol == key.R:
         # TODO: Implement reset mechanism.
         pass
