@@ -10,8 +10,7 @@ from pyglet.window import mouse
 
 # You might be wondering why there's a cannonball but no cannon. Well, that's
 # because I changed my mind and wanted to keep things simple and finish the
-# project ASAP. Besides, I have no idea how to sync cannon with the cannonball
-# lol.
+# project ASAP.
 
 GRAVITY = 9.81
 WINDOW_WIDTH = 1280
@@ -19,7 +18,13 @@ WINDOW_HEIGHT = 720
 FLOOR_HEIGHT = WINDOW_HEIGHT - 600
 INITIAL_BALL_X = 25.0
 INITIAL_BALL_Y = FLOOR_HEIGHT
-TEXT = "Horizontal range: {distance}m"
+TEXT = """Horizontal range: {}m
+Maximum height: {}m
+Total time: {}s
+Angle: {} rad
+Initial velocity: {}m/s
+Horizontal velocity: {}m/s
+Vertical velocity: {}m/s"""
 
 pyglet.resource.path = ["../assets"]
 pyglet.resource.reindex()
@@ -65,14 +70,14 @@ def get_horizontal_range() -> int:
     return math.ceil(bucket_center_x - cannonball_center_x)
 
 
-label = pyglet.text.Label(TEXT.format(distance=get_horizontal_range()),
-                          font_name="Times New Roman",
-                          font_size=20,
-                          color=(0, 0, 0, 255),
-                          x=10, y=WINDOW_HEIGHT - 30,
-                          width=500,
-                          multiline=True,
-                          batch=batch)
+label = pyglet.text.Label(
+    font_name="Times New Roman",
+    font_size=20,
+    color=(0, 0, 0, 255),
+    x=10, y=WINDOW_HEIGHT - 30,
+    width=500,
+    multiline=True,
+    batch=batch)
 
 
 def find_vel_derivative(horizontal_range):
@@ -135,9 +140,6 @@ def move_bucket(dt):
     elif mousebuttons[mouse.RIGHT] and (bucket.x + bucket.width) < window.get_size()[0]:
         bucket.x += bucket.dx * dt
 
-    # Update the text
-    label.text = TEXT.format(distance=get_horizontal_range())
-
 
 def update(dt):
     if started:
@@ -152,6 +154,8 @@ def update(dt):
                 - 0.5 * GRAVITY * (projectile_time ** 2)
     else:
         move_bucket(dt)
+        # Update the text
+        label.text = TEXT.format(get_horizontal_range(), 0, 0, 0, 0, 0, 0)
 
 
 if __name__ == "__main__":
