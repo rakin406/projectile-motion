@@ -1,15 +1,25 @@
 """Entry point to the simulation."""
 
 import math
+import sympy as sym
 import pyglet
 from pyglet.window import Window
+from pyglet import shapes
 from pyglet.window import key
 from pyglet.window import mouse
 
+# You might be wondering why there's a cannonball but no cannon. Well, that's
+# because I changed my mind and wanted to keep things simple and finish the
+# project ASAP. Besides, I have no idea how to sync cannon with the cannonball
+# lol.
+
+GRAVITY = 9.81
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 FLOOR_HEIGHT = WINDOW_HEIGHT - 600
-TEXT = "Horizontal displacement: {distance}m"
+INITIAL_BALL_X = 25.0
+INITIAL_BALL_Y = FLOOR_HEIGHT
+TEXT = "Horizontal range: {distance}m"
 
 pyglet.resource.path = ["../assets"]
 pyglet.resource.reindex()
@@ -28,33 +38,34 @@ background = pyglet.image.SolidColorImagePattern(
     (255, 255, 255, 255)).create_image(WINDOW_WIDTH, WINDOW_HEIGHT)
 
 # Create a straight solid floor
-floor = pyglet.shapes.Line(x=0, y=FLOOR_HEIGHT, x2=1280, y2=FLOOR_HEIGHT,
-                           width=5, color=(0, 0, 0), batch=batch)
+floor = shapes.Line(x=0, y=FLOOR_HEIGHT, x2=1280, y2=FLOOR_HEIGHT,
+                    width=5, color=(0, 0, 0), batch=batch)
 
-# Create cannon sprite
-# WARNING: y-axis of the cannon is hardcoded.
-cannon_image = pyglet.resource.image("cannon.png")
-cannon = pyglet.sprite.Sprite(
-    cannon_image, x=10, y=FLOOR_HEIGHT - 21, batch=batch)
-cannon.scale = 0.1
+# Create cannonball sprite
+# WARNING: y-axis of the sprite is hardcoded.
+cannonball_image = pyglet.resource.image("cannonball.png")
+cannonball = pyglet.sprite.Sprite(cannonball_image, batch=batch)
+cannonball.scale = 0.15
+cannonball.x = INITIAL_BALL_X
+cannonball.y = INITIAL_BALL_Y
 
 # Create bucket sprite
 # WARNING: y-axis of the bucket is hardcoded.
 bucket_image = pyglet.resource.image("bucket.png")
-bucket = pyglet.sprite.Sprite(
-    bucket_image, x=WINDOW_WIDTH // 2, y=FLOOR_HEIGHT + 3, batch=batch)
+bucket = pyglet.sprite.Sprite(bucket_image, batch=batch)
 bucket.scale = 0.2
+bucket.x = (WINDOW_WIDTH // 2) - (bucket.width / 2)
+bucket.y = FLOOR_HEIGHT + 3
 bucket.dx = 400.0
 
 
-def get_displacement_x() -> int:
-    """Get horizontal displacement."""
-    cannon_center_x = cannon.x + ((cannon_image.width / 2) * cannon.scale)
-    bucket_center_x = bucket.x + ((bucket_image.width / 2) * bucket.scale)
-    return math.ceil(bucket_center_x - cannon_center_x)
+def get_horizontal_range() -> int:
+    bucket_center_x = bucket.x + (bucket.width / 2)
+    cannonball_center_x = cannonball.x + (cannonball.width / 2)
+    return math.ceil(bucket_center_x - cannonball_center_x)
 
 
-label = pyglet.text.Label(TEXT.format(distance=get_displacement_x()),
+label = pyglet.text.Label(TEXT.format(distance=get_horizontal_range()),
                           font_name="Times New Roman",
                           font_size=20,
                           color=(0, 0, 0, 255),
@@ -64,11 +75,48 @@ label = pyglet.text.Label(TEXT.format(distance=get_displacement_x()),
                           batch=batch)
 
 
+def find_vel_derivative(horizontal_range):
+    """Find derivative of initial velocity."""
+    x = sym.symbols("x")    # Angle
+    return sym.diff(sym.sqrt((horizontal_range * GRAVITY) / sym.sin(2 * x)), x)
+
+
+def find_best_angle(derivative):
+    return sym.solve(sym.Eq(derivative, 0))
+
+
+def get_initial_vel(horizontal_range, angle) -> float:
+    return math.sqrt((horizontal_range * GRAVITY) / math.sin(2 * angle))
+
+
+def get_horizontal_vel(initial_vel, angle) -> float:
+    return initial_vel * math.cos(angle)
+
+
+def get_total_time(initial_vel, angle) -> float:
+    return (2 * initial_vel * math.sin(angle)) / GRAVITY
+
+
+started = False
+angle = None
+initial_vel = None
+horizontal_vel = None
+total_time = None
+projectile_time = 0.0
+
+
 @window.event
 def on_key_press(symbol, _):
+    # Start the simulation
     if symbol == key.SPACE:
-        # TODO: Start the simulation.
-        pass
+        global started, angle, initial_vel, horizontal_vel, total_time
+        started = True
+        horizontal_range = get_horizontal_range()
+        derivative = find_vel_derivative(horizontal_range)
+        angle = find_best_angle(derivative)[0]
+        initial_vel = get_initial_vel(horizontal_range, angle)
+        horizontal_vel = get_horizontal_vel(initial_vel, angle)
+        total_time = get_total_time(initial_vel, angle)
     elif symbol == key.R:
         # TODO: Implement reset mechanism.
         pass
@@ -82,16 +130,30 @@ def on_draw():
 
 
 def move_bucket(dt):
-    if mousebuttons[mouse.LEFT] and \
-            bucket.x > (cannon.x + (cannon_image.width * cannon.scale)):
+    if mousebuttons[mouse.LEFT] and bucket.x > (cannonball.x + cannonball.width):
         bucket.x -= bucket.dx * dt
-    elif mousebuttons[mouse.RIGHT] and (bucket.x + (bucket_image.width * bucket.scale)) < window.get_size()[0]:
+    elif mousebuttons[mouse.RIGHT] and (bucket.x + bucket.width) < window.get_size()[0]:
         bucket.x += bucket.dx * dt
 
     # Update the text
-    label.text = TEXT.format(distance=get_displacement_x())
+    label.text = TEXT.format(distance=get_horizontal_range())
+
+
+def update(dt):
+    if started:
+        if cannonball.x <= bucket.x:
+            global projectile_time
+            projectile_time += dt
+
+            # TODO: Make cannonball land inside the bucket instead of outside.
+            initial_vertical_vel = initial_vel * math.sin(angle)
+            cannonball.x = INITIAL_BALL_X + horizontal_vel * projectile_time
+            cannonball.y = INITIAL_BALL_Y + initial_vertical_vel * projectile_time \
+                - 0.5 * GRAVITY * (projectile_time ** 2)
+    else:
+        move_bucket(dt)
 
 
 if __name__ == "__main__":
-    pyglet.clock.schedule_interval(move_bucket, 1 / 60.0)
+    pyglet.clock.schedule_interval(update, 1 / 60.0)
     pyglet.app.run()
