@@ -1,6 +1,7 @@
 """Entry point to the simulation."""
 
 import math
+from enum import Enum, auto
 import sympy as sym
 import pyglet
 from pyglet.window import Window
@@ -25,6 +26,13 @@ Angle: {} rad
 Initial velocity: {}m/s
 Horizontal velocity: {}m/s
 Vertical velocity: {}m/s"""
+
+
+class State(Enum):
+    SETTING = auto()
+    MOVING = auto()
+    FINISHED = auto()
+
 
 pyglet.resource.path = ["../assets"]
 pyglet.resource.reindex()
@@ -113,8 +121,7 @@ def get_horizontal_range() -> float:
     return bucket_center_x - cannonball_center_x
 
 
-started = False
-moving = False
+state = State.SETTING
 horizontal_range = 0.0
 max_height = 0.0
 total_time = 0.0
@@ -126,13 +133,12 @@ projectile_time = 0.0
 
 @window.event
 def on_key_press(symbol, _):
-    global started
+    global state
 
     # Start the simulation
-    if symbol == key.SPACE and not started:
-        global moving, max_height, total_time, angle, initial_vel, horizontal_vel
-        started = True
-        moving = True
+    if symbol == key.SPACE and state == State.SETTING:
+        global max_height, total_time, angle, initial_vel, horizontal_vel
+        state = State.MOVING
         derivative = find_vel_derivative(horizontal_range)
         angle = find_best_angle(derivative)[0]
         initial_vel = get_initial_vel(horizontal_range, angle)
@@ -159,9 +165,13 @@ def move_bucket(dt):
 
 
 def update(dt):
-    global moving, horizontal_range
+    global state, horizontal_range
 
-    if started and moving:
+    if state == State.SETTING:
+        move_bucket(dt)
+        horizontal_range = get_horizontal_range()
+        label.text = TEXT.format(round(horizontal_range, 2), 0, 0, 0, 0, 0, 0)
+    elif state == State.MOVING:
         if cannonball.x <= (bucket.x + bucket.width / 2):
             global projectile_time
             projectile_time += dt * SPEED_MULTIPLIER
@@ -184,11 +194,7 @@ def update(dt):
                 round(current_vertical_vel, 2))
         else:
             cannonball.delete()
-            moving = False
-    elif not started:
-        move_bucket(dt)
-        horizontal_range = get_horizontal_range()
-        label.text = TEXT.format(round(horizontal_range, 2), 0, 0, 0, 0, 0, 0)
+            state = State.FINISHED
 
 
 if __name__ == "__main__":
