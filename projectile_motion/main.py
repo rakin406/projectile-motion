@@ -1,6 +1,7 @@
 """Entry point to the simulation."""
 
 import math
+from enum import Enum, auto
 import sympy as sym
 import pyglet
 from pyglet.window import Window
@@ -14,9 +15,9 @@ from pyglet.window import mouse
 
 GRAVITY = 9.81
 SPEED_MULTIPLIER = 3  # Increase to speed up the simulation
-WINDOW_WIDTH = 1280
-WINDOW_HEIGHT = 720
-FLOOR_HEIGHT = WINDOW_HEIGHT - 600
+WINDOW_WIDTH = 1800
+WINDOW_HEIGHT = 1000
+FLOOR_HEIGHT = WINDOW_HEIGHT - 800
 INITIAL_BALL_X = 25.0
 TEXT = """Horizontal range: {}m
 Maximum height: {}m
@@ -25,6 +26,13 @@ Angle: {} rad
 Initial velocity: {}m/s
 Horizontal velocity: {}m/s
 Vertical velocity: {}m/s"""
+
+
+class State(Enum):
+    SETTING = auto()
+    MOVING = auto()
+    FINISHED = auto()
+
 
 pyglet.resource.path = ["../assets"]
 pyglet.resource.reindex()
@@ -43,7 +51,7 @@ background = pyglet.image.SolidColorImagePattern(
     (255, 255, 255, 255)).create_image(WINDOW_WIDTH, WINDOW_HEIGHT)
 
 # Create a straight solid floor
-floor = shapes.Line(x=0, y=FLOOR_HEIGHT, x2=1280, y2=FLOOR_HEIGHT,
+floor = shapes.Line(x=0, y=FLOOR_HEIGHT, x2=WINDOW_WIDTH, y2=FLOOR_HEIGHT,
                     width=5, color=(0, 0, 0), batch=batch)
 
 # Create cannonball sprite
@@ -113,7 +121,7 @@ def get_horizontal_range() -> float:
     return bucket_center_x - cannonball_center_x
 
 
-started = False
+state = State.SETTING
 horizontal_range = 0.0
 max_height = 0.0
 total_time = 0.0
@@ -125,10 +133,12 @@ projectile_time = 0.0
 
 @window.event
 def on_key_press(symbol, _):
+    global state
+
     # Start the simulation
-    if symbol == key.SPACE:
-        global started, max_height, total_time, angle, initial_vel, horizontal_vel
-        started = True
+    if symbol == key.SPACE and state == State.SETTING:
+        global max_height, total_time, angle, initial_vel, horizontal_vel
+        state = State.MOVING
         derivative = find_vel_derivative(horizontal_range)
         angle = find_best_angle(derivative)[0]
         initial_vel = get_initial_vel(horizontal_range, angle)
@@ -155,9 +165,13 @@ def move_bucket(dt):
 
 
 def update(dt):
-    global horizontal_range
+    global state, horizontal_range
 
-    if started:
+    if state == State.SETTING:
+        move_bucket(dt)
+        horizontal_range = get_horizontal_range()
+        label.text = TEXT.format(round(horizontal_range, 2), 0, 0, 0, 0, 0, 0)
+    elif state == State.MOVING:
         if cannonball.x <= (bucket.x + bucket.width / 2):
             global projectile_time
             projectile_time += dt * SPEED_MULTIPLIER
@@ -178,10 +192,9 @@ def update(dt):
                 round(initial_vel, 2),
                 round(horizontal_vel, 2),
                 round(current_vertical_vel, 2))
-    else:
-        move_bucket(dt)
-        horizontal_range = get_horizontal_range()
-        label.text = TEXT.format(round(horizontal_range, 2), 0, 0, 0, 0, 0, 0)
+        else:
+            cannonball.delete()
+            state = State.FINISHED
 
 
 if __name__ == "__main__":
