@@ -13,11 +13,11 @@ from pyglet.window import mouse
 # project ASAP.
 
 GRAVITY = 9.81
+SPEED_MULTIPLIER = 3  # Increase to speed up the simulation
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 FLOOR_HEIGHT = WINDOW_HEIGHT - 600
 INITIAL_BALL_X = 25.0
-INITIAL_BALL_Y = FLOOR_HEIGHT
 TEXT = """Horizontal range: {}m
 Maximum height: {}m
 Total time: {}s
@@ -52,7 +52,6 @@ cannonball_image = pyglet.resource.image("cannonball.png")
 cannonball = pyglet.sprite.Sprite(cannonball_image, batch=batch)
 cannonball.scale = 0.15
 cannonball.x = INITIAL_BALL_X
-cannonball.y = INITIAL_BALL_Y
 
 # Create bucket sprite
 # WARNING: y-axis of the bucket is hardcoded.
@@ -62,6 +61,13 @@ bucket.scale = 0.2
 bucket.x = (WINDOW_WIDTH // 2) - (bucket.width / 2)
 bucket.y = FLOOR_HEIGHT + 3
 bucket.dx = 400.0
+
+# Create a ledge for cannonball
+ledge_y = (bucket.y + bucket.height) - 35.0
+ledge = shapes.Line(x=0, y=ledge_y, x2=75.0, y2=ledge_y,
+                    width=5, color=(0, 0, 0), batch=batch)
+INITIAL_BALL_Y = ledge_y
+cannonball.y = INITIAL_BALL_Y
 
 label = pyglet.text.Label(
     font_name="Times New Roman",
@@ -95,6 +101,8 @@ def get_total_time(initial_vel, angle) -> float:
     return (2 * initial_vel * math.sin(angle)) / GRAVITY
 
 
+# NOTE: This is probably a wrong method because the cannonball is elevated by
+# the ledge so that means the maximum height should be greater.
 def get_max_height(initial_vel, angle) -> float:
     return ((initial_vel ** 2) * (math.sin(angle) ** 2)) / 2 * GRAVITY
 
@@ -150,11 +158,10 @@ def update(dt):
     global horizontal_range
 
     if started:
-        if cannonball.x <= bucket.x:
+        if cannonball.x <= (bucket.x + bucket.width / 2):
             global projectile_time
-            projectile_time += dt
+            projectile_time += dt * SPEED_MULTIPLIER
 
-            # TODO: Make cannonball land inside the bucket instead of outside.
             initial_vertical_vel = initial_vel * math.sin(angle)
             cannonball.x = INITIAL_BALL_X + horizontal_vel * projectile_time
             cannonball.y = INITIAL_BALL_Y + initial_vertical_vel * projectile_time \
