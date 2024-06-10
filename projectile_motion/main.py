@@ -66,7 +66,8 @@ cannonball.x = INITIAL_BALL_X
 bucket_image = pyglet.resource.image("bucket.png")
 bucket = pyglet.sprite.Sprite(bucket_image, batch=batch)
 bucket.scale = 0.2
-bucket.x = (WINDOW_WIDTH // 2) - (bucket.width / 2)
+INITIAL_BUCKET_X = (WINDOW_WIDTH / 2) - (bucket.width / 2)
+bucket.x = INITIAL_BUCKET_X
 bucket.y = FLOOR_HEIGHT + 3
 bucket.dx = 400.0
 
@@ -131,6 +132,22 @@ horizontal_vel = 0.0
 projectile_time = 0.0
 
 
+def reset():
+    global max_height, total_time, angle, initial_vel, horizontal_vel, \
+        projectile_time
+    max_height = 0.0
+    total_time = 0.0
+    angle = 0.0
+    initial_vel = 0.0
+    horizontal_vel = 0.0
+    projectile_time = 0.0
+
+    cannonball.batch = batch
+    cannonball.x = INITIAL_BALL_X
+    cannonball.y = INITIAL_BALL_Y
+    bucket.x = INITIAL_BUCKET_X
+
+
 @window.event
 def on_key_press(symbol, _):
     global state
@@ -145,9 +162,10 @@ def on_key_press(symbol, _):
         horizontal_vel = get_horizontal_vel(initial_vel, angle)
         max_height = get_max_height(initial_vel, angle)
         total_time = get_total_time(initial_vel, angle)
+    # Reset everything
     elif symbol == key.R:
-        # TODO: Implement reset mechanism.
-        pass
+        state = State.SETTING
+        reset()
 
 
 @window.event
@@ -193,7 +211,7 @@ def update(dt):
                 round(horizontal_vel, 2),
                 round(current_vertical_vel, 2))
         else:
-            cannonball.delete()
+            cannonball.batch = None
             state = State.FINISHED
 
 
