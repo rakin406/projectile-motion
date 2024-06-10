@@ -14,9 +14,9 @@ from pyglet.window import mouse
 
 GRAVITY = 9.81
 SPEED_MULTIPLIER = 3  # Increase to speed up the simulation
-WINDOW_WIDTH = 1280
-WINDOW_HEIGHT = 720
-FLOOR_HEIGHT = WINDOW_HEIGHT - 600
+WINDOW_WIDTH = 1800
+WINDOW_HEIGHT = 1000
+FLOOR_HEIGHT = WINDOW_HEIGHT - 800
 INITIAL_BALL_X = 25.0
 TEXT = """Horizontal range: {}m
 Maximum height: {}m
@@ -43,7 +43,7 @@ background = pyglet.image.SolidColorImagePattern(
     (255, 255, 255, 255)).create_image(WINDOW_WIDTH, WINDOW_HEIGHT)
 
 # Create a straight solid floor
-floor = shapes.Line(x=0, y=FLOOR_HEIGHT, x2=1280, y2=FLOOR_HEIGHT,
+floor = shapes.Line(x=0, y=FLOOR_HEIGHT, x2=WINDOW_WIDTH, y2=FLOOR_HEIGHT,
                     width=5, color=(0, 0, 0), batch=batch)
 
 # Create cannonball sprite
