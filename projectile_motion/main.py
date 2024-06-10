@@ -114,6 +114,7 @@ def get_horizontal_range() -> float:
 
 
 started = False
+moving = False
 horizontal_range = 0.0
 max_height = 0.0
 total_time = 0.0
@@ -125,10 +126,13 @@ projectile_time = 0.0
 
 @window.event
 def on_key_press(symbol, _):
+    global started
+
     # Start the simulation
-    if symbol == key.SPACE:
-        global started, max_height, total_time, angle, initial_vel, horizontal_vel
+    if symbol == key.SPACE and not started:
+        global moving, max_height, total_time, angle, initial_vel, horizontal_vel
         started = True
+        moving = True
         derivative = find_vel_derivative(horizontal_range)
         angle = find_best_angle(derivative)[0]
         initial_vel = get_initial_vel(horizontal_range, angle)
@@ -155,9 +159,9 @@ def move_bucket(dt):
 
 
 def update(dt):
-    global horizontal_range
+    global moving, horizontal_range
 
-    if started:
+    if started and moving:
         if cannonball.x <= (bucket.x + bucket.width / 2):
             global projectile_time
             projectile_time += dt * SPEED_MULTIPLIER
@@ -178,7 +182,10 @@ def update(dt):
                 round(initial_vel, 2),
                 round(horizontal_vel, 2),
                 round(current_vertical_vel, 2))
-    else:
+        else:
+            cannonball.delete()
+            moving = False
+    elif not started:
         move_bucket(dt)
         horizontal_range = get_horizontal_range()
         label.text = TEXT.format(round(horizontal_range, 2), 0, 0, 0, 0, 0, 0)
